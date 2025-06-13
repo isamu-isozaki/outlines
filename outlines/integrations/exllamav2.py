@@ -31,12 +31,86 @@ from typing import DefaultDict, Optional, Type, Union
 
 import torch
 from pydantic import BaseModel
-from transformers import PreTrainedTokenizerBase
+from transformers import PreTrainedTokenizerBase, SPIECE_UNDERLINE, PreTrainedTokenizerBase
 
 from outlines.fsm.guide import Guide, RegexGuide
 from outlines_core.fsm.json_schema import build_regex_from_schema
 from outlines.generate.generator import is_generation_finished
-from outlines.integrations.utils import adapt_tokenizer, convert_json_schema_to_str
+
+import json
+
+
+
+def adapt_tokenizer(tokenizer: PreTrainedTokenizerBase) -> PreTrainedTokenizerBase:
+    """Adapt a tokenizer to use to compile the FSM.
+
+    The API of Outlines tokenizers is slightly different to that of `transformers`. In
+    addition we need to handle the missing spaces to Llama's tokenizer to be able to
+    compile FSMs for this model.
+
+    Parameters
+    ----------
+    tokenizer
+        The tokenizer of the model.
+
+    Returns
+    -------
+    PreTrainedTokenizerBase
+        The adapted tokenizer.
+    """
+    tokenizer.vocabulary = tokenizer.get_vocab()
+    tokenizer.special_tokens = set(tokenizer.all_special_tokens)
+
+    def convert_token_to_string(token: Union[str, bytes]) -> str:
+        string = tokenizer.convert_tokens_to_string([token])
+
+        # A hack to handle missing spaces to HF's Llama tokenizers
+        if (
+            type(token) is str
+            and token.startswith(SPIECE_UNDERLINE)
+            or token == "<0x20>"
+        ):
+            return " " + string
+
+        return string
+
+    tokenizer.convert_token_to_string = convert_token_to_string
+
+    return tokenizer
+
+
+def convert_json_schema_to_str(json_schema: Union[dict, str, Type[BaseModel]]) -> str:
+    """Convert a JSON schema to a string.
+
+    Parameters
+    ----------
+    json_schema
+        The JSON schema.
+
+    Returns
+    -------
+    str
+        The JSON schema converted to a string.
+
+    Raises
+    ------
+    ValueError
+        If the schema is not a dictionary, a string or a Pydantic class.
+    """
+    if isinstance(json_schema, dict):
+        schema_str = json.dumps(json_schema)
+    elif isinstance(json_schema, str):
+        schema_str = json_schema
+    elif issubclass(json_schema, BaseModel):
+        schema_str = json.dumps(json_schema.model_json_schema())
+    else:
+        raise ValueError(
+            f"Cannot parse schema {json_schema}. The schema must be either "
+            + "a Pydantic class, a dictionary or a string that contains the JSON "
+            + "schema specification"
+        )
+    return schema_str
+
 
 
 class FSMFilter:
