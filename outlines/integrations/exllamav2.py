@@ -34,7 +34,7 @@ from pydantic import BaseModel
 from transformers import PreTrainedTokenizerBase
 
 from outlines.fsm.guide import Guide, RegexGuide
-from outlines.fsm.json_schema import build_regex_from_schema
+from outlines_core.fsm.json_schema import build_regex_from_schema
 from outlines.generate.generator import is_generation_finished
 from outlines.integrations.utils import adapt_tokenizer, convert_json_schema_to_str
 
