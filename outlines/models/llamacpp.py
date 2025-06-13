@@ -27,7 +27,7 @@ class LlamaCppTokenizer(Tokenizer):
         self.eos_token_id = model.token_eos()
         self.eos_token = model.tokenizer().decode([self.eos_token_id])
         self.pad_token_id = self.eos_token_id
-        self.special_tokens: Set[int] = set()
+        self.special_tokens: Set[str] = set()
 
         self.vocabulary: Dict[str, int] = dict()
 
@@ -141,6 +141,10 @@ class LlamaCpp:
     def __init__(self, model: "Llama"):
         self.model = model
 
+    @property
+    def tokenizer(self):
+        return LlamaCppTokenizer(self.model)
+
     def prepare_generation_parameters(
         self,
         generation_parameters: GenerationParameters,
@@ -244,8 +248,8 @@ class LlamaCpp:
     ) -> str:
         """Generate text using `llama-cpp-python`.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         prompts
             A prompt or list of prompts.
         generation_parameters
@@ -298,8 +302,8 @@ class LlamaCpp:
     ) -> Iterator[str]:
         """Stream text using `llama-cpp-python`.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         prompts
             A prompt or list of prompts.
         generation_parameters
@@ -368,8 +372,8 @@ def llamacpp(
     a path to the downloaded model. One can still load a local model
     by initializing `llama_cpp.Llama` directly.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     repo_id
         The name of the model repository.
     filename:

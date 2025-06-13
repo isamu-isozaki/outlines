@@ -9,18 +9,20 @@ References
        https://arxiv.org/abs/2102.07350.
 
 """
+
 import argparse
 
 import outlines
 import outlines.models as models
+from outlines import Template
 
 
 def split_into_steps(question, model_name: str):
-    @outlines.prompt
-    def solve(question):
+    solve = Template.from_string(
         """{{question}}
         Rephrase : : as a true or false statement, identify an Object, relationship and subject
         """
+    )
 
     model = models.openai(model_name)
     generator = outlines.generate.text(model)
@@ -38,16 +40,14 @@ def split_into_steps(question, model_name: str):
 
 
 def fill_in_the_blanks(question, model_name: str):
-    @outlines.prompt
-    def determine_goal(question):
+    determine_goal = Template.from_string(
         """{{question}}
 
         In order to solve this problem, we will analyze each of the options and determine
         """
+    )
 
-    @outlines.prompt
-    def solve(memory):
-        """{{memory}}. Let's begin."""
+    solve = Template.from_string("""{{memory}}. Let's begin.""")
 
     model = models.openai(model_name)
     generator = outlines.generate.text(model)
@@ -62,8 +62,7 @@ def fill_in_the_blanks(question, model_name: str):
 
 
 def ask_an_expert(question, model_name: str):
-    @outlines.prompt
-    def find_expert(question):
+    find_expert = Template.from_string(
         """
         {{question}}
         I entered my question into the Expert Generator \
@@ -79,15 +78,16 @@ def ask_an_expert(question, model_name: str):
         found the most qualified expert. The name displayed \
         on the screen: "
         """
+    )
 
-    @outlines.prompt
-    def get_answer(question, expert, memory):
+    get_answer = Template.from_string(
         """
         {{memory}}".
         I am ready to ask my question.
         "{{expert}}" I say,
         {{question}}
         """
+    )
 
     model = models.openai(model_name)
     generator = outlines.generate.text(model)
@@ -102,20 +102,20 @@ def ask_an_expert(question, model_name: str):
 
 
 def ask_an_expert_simple(question, model_name: str):
-    @outlines.prompt
-    def find_expert(question):
+    find_expert = Template.from_string(
         """
         Q: {{question}}
         A: A good person to answer this question would be
         """
+    )
 
-    @outlines.prompt
-    def get_answer(expert, memory):
+    get_answer = Template.from_string(
         """
         {{memory}}.
 
         For instance, {{expert}} would answer
         """
+    )
 
     model = models.openai(model_name)
     generator = outlines.generate.text(model)
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model",
         type=str,
-        default="gpt-3.5-turbo-1106",
+        default="gpt-4o-mini",
         help="The Large Language Model to use to run the examples.",
     )
     args = parser.parse_args()

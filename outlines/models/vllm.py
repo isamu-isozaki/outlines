@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, List, Optional, Union
 from outlines.generate.api import GenerationParameters, SamplingParameters
 
 if TYPE_CHECKING:
+    from transformers import PreTrainedTokenizerBase
     from vllm import LLM
     from vllm.sampling_params import SamplingParams
 
@@ -22,6 +23,23 @@ class VLLM:
         self.model = model
         self.lora_request = None
 
+        self.tokenizer = self._get_tokenizer()
+
+    def _get_tokenizer(self):
+        if hasattr(self.model, "get_tokenizer"):
+            tokenizer = self.model.get_tokenizer()
+        elif hasattr(self.model, "tokenizer"):
+            if hasattr(self.model.tokenizer, "tokenizer"):
+                tokenizer = self.model.tokenizer.tokenizer
+            else:
+                tokenizer = self.model.tokenizer
+        else:
+            raise ValueError(
+                "The provided LLM instance neither has a "
+                "`tokenizer` attribute or a `get_tokenizer` method."
+            )
+        return adapt_tokenizer(tokenizer=tokenizer)
+
     def generate(
         self,
         prompts: Union[str, List[str]],
@@ -34,8 +52,8 @@ class VLLM:
     ):
         """Generate text using vLLM.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         prompts
             A prompt or list of prompts.
         generation_parameters
@@ -100,6 +118,10 @@ class VLLM:
             sampling_params.top_p = top_p
         if top_k is not None and sampling_params.top_k == -1:
             sampling_params.top_k = top_k
+            # TODO: remove this if statement once fixed
+            # https://github.com/vllm-project/vllm/issues/5404#issuecomment-2175972897
+            if top_k == 1:
+                sampling_params.repetition_penalty = 0
         if temperature is not None and sampling_params.temperature == 1.0:
             sampling_params.temperature = temperature
         if sampler == "beam_search":
@@ -149,7 +171,7 @@ class VLLM:
 def vllm(model_name: str, **vllm_model_params):
     """Load a vLLM model.
 
-    Arguments
+    Parameters
     ---------
     model_name
         The name of the model to load from the HuggingFace hub.
@@ -163,3 +185,43 @@ def vllm(model_name: str, **vllm_model_params):
     model = LLM(model_name, **vllm_model_params)
 
     return VLLM(model)
+
+
+def adapt_tokenizer(tokenizer: "PreTrainedTokenizerBase") -> "PreTrainedTokenizerBase":
+    """Adapt a tokenizer to use to compile the FSM.
+
+    The API of Outlines tokenizers is slightly different to that of `transformers`. In
+    addition we need to handle the missing spaces to Llama's tokenizer to be able to
+    compile FSMs for this model.
+
+    Parameters
+    ----------
+    tokenizer
+        The tokenizer of the model.
+
+    Returns
+    -------
+    PreTrainedTokenizerBase
+        The adapted tokenizer.
+    """
+    from transformers import SPIECE_UNDERLINE
+
+    tokenizer.vocabulary = tokenizer.get_vocab()
+    tokenizer.special_tokens = set(tokenizer.all_special_tokens)
+
+    def convert_token_to_string(token: Union[str, bytes]) -> str:
+        string = tokenizer.convert_tokens_to_string([token])
+
+        # A hack to handle missing spaces to HF's Llama tokenizers
+        if (
+            type(token) is str
+            and token.startswith(SPIECE_UNDERLINE)
+            or token == "<0x20>"
+        ):
+            return " " + string
+
+        return string
+
+    tokenizer.convert_token_to_string = convert_token_to_string
+
+    return tokenizer

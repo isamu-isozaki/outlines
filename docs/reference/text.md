@@ -9,11 +9,11 @@ Outlines provides a unified interface to generate text with many language models
 ```python
 from outlines import models, generate
 
-model = models.openai("gpt-4")
+model = models.openai("gpt-4o-mini")
 generator = generate.text(model)
 answer = generator("What is 2+2?")
 
-model = models.transformers("mistralai/Mistral-7B-v0.1")
+model = models.transformers("microsoft/Phi-3-mini-4k-instruct")
 generator = generate.text(model)
 answer = generator("What is 2+2?")
 ```
@@ -28,7 +28,7 @@ Outlines allows you to stream the model's response by calling the `.stream` meth
 ```python
 from outlines import models, generate
 
-model = models.transformers("mistralai/Mistral-7B-v0.1")
+model = models.transformers("microsoft/Phi-3-mini-4k-instruct")
 generator = generate.text(model)
 
 tokens = generator.stream("What is 2+2?")
@@ -45,7 +45,7 @@ To limit the number of tokens generated you can pass the `max_tokens` positional
 ```python
 from outlines import models, generate
 
-model = models.transformers("mistralai/Mistral-7B-v0.1")
+model = models.transformers("microsoft/Phi-3-mini-4k-instruct")
 generator = generate.text(model)
 
 answer = generator("What is 2+2?", 5)
@@ -60,7 +60,7 @@ You can also ask the model to stop generating text after a given string has been
 ```python
 from outlines import models, generate
 
-model = models.transformers("mistralai/Mistral-7B-v0.1")
+model = models.transformers("microsoft/Phi-3-mini-4k-instruct")
 generator = generate.text(model)
 
 answer = generator("What is 2+2?", stop_at=".")
@@ -78,10 +78,9 @@ It can be useful to seed the generation in order to get reproducible results:
 import torch
 from outlines import models, generate
 
-model = models.transformers("mistralai/Mistral-7B-v0.1")
+model = models.transformers("microsoft/Phi-3-mini-4k-instruct")
 
-rng = torch.Generator(device="cuda")
-rng.manual_seed(789001)
+seed = 789001
 
-answer = generator("What is 2+2?", rng=rng)
+answer = generator("What is 2+2?", seed=seed)
 ```

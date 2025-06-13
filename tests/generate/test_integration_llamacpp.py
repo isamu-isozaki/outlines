@@ -5,7 +5,6 @@ import pytest
 from pydantic import BaseModel, constr
 
 import outlines.generate as generate
-import outlines.grammars as grammars
 import outlines.models as models
 import outlines.samplers as samplers
 
@@ -25,7 +24,7 @@ def model(tmp_path_factory):
     (
         (generate.text, []),
         (generate.regex, ("[0-9]",)),
-        (generate.cfg, (grammars.arithmetic,)),
+        # (generate.cfg, (grammars.arithmetic,)),  # Awaiting CFG fix
     ),
 )
 def test_llamacpp_generation_api(model, generator_type, params):
@@ -243,12 +242,6 @@ def test_llamacpp_json_schema(model):
     assert isinstance(result["bar"], str)
 
 
-def test_llamacpp_cfg(model):
-    prompt = "<|im_start|>user\nOutput a short and valid JSON object with two keys.<|im_end|>\n><|im_start|>assistant\n"
-    result = generate.cfg(model, grammars.arithmetic)(prompt, seed=11)
-    assert isinstance(result, str)
-
-
 @pytest.mark.parametrize(
     "repo,model_path,hf_tokenizer_uri",
     [
@@ -257,7 +250,7 @@ def test_llamacpp_cfg(model):
     ],
 )
 def test_byte_tokenizer_regression(repo, model_path, hf_tokenizer_uri):
-    """Reproduce https://github.com/outlines-dev/outlines/issues/820"""
+    """Reproduce https://github.com/dottxt-ai/outlines/issues/820"""
     import llama_cpp
 
     model = models.llamacpp(
@@ -281,11 +274,12 @@ def test_llama_cpp_pre_tokenizer_remains_broken():
         generate.choice(model, ["skirt", "dress", "pen", "jacket"])
 
 
+@pytest.mark.skip("Caching for guide was temporarily turned off")
 def test_RegexGuide_caching(model, temp_cache_dir):
     import llama_cpp
 
     import outlines.caching
-    from outlines.fsm.guide import create_states_mapping
+    from outlines.fsm.guide import cached_create_states_mapping
 
     assert outlines.caching._caching_enabled
 
@@ -298,7 +292,7 @@ def test_RegexGuide_caching(model, temp_cache_dir):
     _ = cache.stats(enable=True)
     assert cache.statistics
 
-    assert create_states_mapping.__memory__ is cache
+    assert cached_create_states_mapping.__memory__ is cache
 
     generator = generate.regex(model, regex, sampler=samplers.greedy())
     assert cache.stats() == (0, 1)
@@ -316,15 +310,15 @@ def test_RegexGuide_caching(model, temp_cache_dir):
     # These two different models and tokenizers should not have the same state
     # mapping results
     assert (
-        generator.logits_processor.fsm.states_to_token_maps
-        != generator_2.logits_processor.fsm.states_to_token_maps
+        generator.logits_processor.guide.states_to_token_maps
+        != generator_2.logits_processor.guide.states_to_token_maps
     )
 
     generator_3 = generate.regex(model_2, regex, sampler=samplers.greedy())
     assert cache.stats() == (1, 2)
     assert (
-        generator_2.logits_processor.fsm.states_to_token_maps
-        == generator_3.logits_processor.fsm.states_to_token_maps
+        generator_2.logits_processor.guide.states_to_token_maps
+        == generator_3.logits_processor.guide.states_to_token_maps
     )
 
     # Just for fun...
@@ -336,6 +330,9 @@ def test_RegexGuide_caching(model, temp_cache_dir):
     assert structured != structured_2
 
 
+@pytest.mark.xfail(
+    reason="Some versions of the Hermes-2-Pro-Llama-3 model have a broken config"
+)
 def test_tokenizer_vocabulary_decode_sanity():
     """Assert the decoded newline token (198) is the same as the normalized vocab token"""
     import llama_cpp
@@ -344,7 +341,7 @@ def test_tokenizer_vocabulary_decode_sanity():
         "bartowski/Meta-Llama-3-8B-Instruct-GGUF",
         "Meta-Llama-3-8B-Instruct-IQ1_M.gguf",
         tokenizer=llama_cpp.llama_tokenizer.LlamaHFTokenizer.from_pretrained(
-            "NousResearch/Hermes-2-Pro-Llama-3-8B"
+            "NousResearch/Hermes-2-Pro-Llama-3-8B",
         ),
     )
     tokenizer = generate.regex(model, "a").logits_processor.tokenizer

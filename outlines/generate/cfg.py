@@ -1,61 +1,49 @@
 from functools import singledispatch
 
-from outlines.fsm.guide import CFGGuide
-from outlines.generate.api import SequenceGenerator, SequenceGeneratorAdapter
-from outlines.models import OpenAI
-from outlines.models.llamacpp import LlamaCpp
-from outlines.models.mlxlm import MLXLM
-from outlines.models.vllm import VLLM
+from outlines.generate.api import (
+    SequenceGeneratorAdapter,
+    VisionSequenceGeneratorAdapter,
+)
+from outlines.models import LlamaCpp, OpenAI, TransformersVision
 from outlines.samplers import Sampler, multinomial
 
 
 @singledispatch
-def cfg(model, cfg_str: str, sampler: Sampler = multinomial()) -> SequenceGenerator:
+def cfg(
+    model, cfg_str: str, sampler: Sampler = multinomial()
+) -> SequenceGeneratorAdapter:
     """Generate text in the language of a Context-Free Grammar
 
     Arguments
     ---------
     model:
-        An instance of `Transformer` that represents a model from the
-        `transformers` library.
+        An `outlines.model` instance.
     sampler:
         The sampling algorithm to use to generate token ids from the logits
         distribution.
 
     Returns
     -------
-    A `SequenceGenerator` instance that generates text.
+    A `SequenceGeneratorAdapter` instance that generates text.
 
     """
-    fsm = CFGGuide(cfg_str, model.tokenizer)
-    device = model.device
-    generator = SequenceGenerator(fsm, model, sampler, device)
+    from outlines.processors import CFGLogitsProcessor
 
-    return generator
+    logits_processor = CFGLogitsProcessor(cfg_str, tokenizer=model.tokenizer)
+    return SequenceGeneratorAdapter(model, logits_processor, sampler)
 
 
-@cfg.register(MLXLM)
-@cfg.register(VLLM)
-def cfg_unimplemented(
-    model,
-    cfg_str: str,
-    sampler: Sampler = multinomial(),
-):
-    raise NotImplementedError(
-        f"The CFG Logits processor is not available for {type(model)}."
-    )
+@cfg.register(TransformersVision)
+def cfg_vision(model, cfg_str: str, sampler: Sampler = multinomial()):
+    from outlines.processors import CFGLogitsProcessor
+
+    logits_processor = CFGLogitsProcessor(cfg_str, tokenizer=model.tokenizer)
+    return VisionSequenceGeneratorAdapter(model, logits_processor, sampler)
 
 
 @cfg.register(LlamaCpp)
-def cfg_llamacpp(
-    model: LlamaCpp,
-    cfg_str: str,
-    sampler: Sampler = multinomial(),
-):
-    from outlines.integrations.llamacpp import CFGLogitsProcessor
-
-    logits_processor = CFGLogitsProcessor(cfg_str, model.model)
-    return SequenceGeneratorAdapter(model, logits_processor, sampler)
+def cfg_llamacpp(model, cfg_str: str, sampler: Sampler = multinomial()):
+    raise NotImplementedError("Not yet available due to bug in llama_cpp tokenizer")
 
 
 @cfg.register(OpenAI)

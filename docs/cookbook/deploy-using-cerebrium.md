@@ -24,6 +24,9 @@ cerebrium init outlines-project
 You set up your environment and hardware in the cerebrium.toml file that was created using the init function above.
 
 ```toml
+[cerebrium.deployment]
+docker_base_image_url = "nvidia/cuda:12.1.1-runtime-ubuntu22.04"
+
 [cerebrium.hardware]
 cpu = 2
 memory = 14.0
@@ -47,7 +50,7 @@ Running code in Cerebrium is like writing normal python with no special syntax. 
 import outlines
 
 
-model = outlines.models.transformers("mistralai/Mistral-7B-Instruct-v0.2")
+model = outlines.models.transformers("microsoft/Phi-3-mini-4k-instruct")
 
 schema = """{
     "title": "Character",

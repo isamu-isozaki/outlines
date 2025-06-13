@@ -1,16 +1,16 @@
 from functools import singledispatch
 
-from outlines.fsm.guide import RegexGuide
-from outlines.generate.api import SequenceGenerator, SequenceGeneratorAdapter
-from outlines.models import OpenAI
-from outlines.models.llamacpp import LlamaCpp
-from outlines.models.mlxlm import MLXLM
-from outlines.models.vllm import VLLM
+from outlines.generate.api import (
+    SequenceGeneratorAdapter,
+    VisionSequenceGeneratorAdapter,
+)
+from outlines.models import OpenAI, TransformersVision
 from outlines.samplers import Sampler, multinomial
+from outlines.types import Regex
 
 
 @singledispatch
-def regex(model, regex_str: str, sampler: Sampler = multinomial()):
+def regex(model, regex_str: str | Regex, sampler: Sampler = multinomial()):
     """Generate structured text in the language of a regular expression.
 
     Parameters
@@ -26,52 +26,32 @@ def regex(model, regex_str: str, sampler: Sampler = multinomial()):
 
     Returns
     -------
-    A `SequenceGenerator` instance that generates text constrained by the
+    A `SequenceGeneratorAdapter` instance that generates text constrained by the
     regular expression.
 
     """
-    fsm = RegexGuide(regex_str, model.tokenizer)
-
-    device = model.device
-    generator = SequenceGenerator(fsm, model, sampler, device)
-
-    return generator
-
-
-@regex.register(MLXLM)
-def regex_mlxlm(
-    model: MLXLM,
-    regex_str: str,
-    sampler: Sampler = multinomial(),
-):
     from outlines.processors import RegexLogitsProcessor
+
+    if isinstance(regex_str, Regex):
+        regex_str = regex_str.pattern
 
     logits_processor = RegexLogitsProcessor(regex_str, tokenizer=model.tokenizer)
     return SequenceGeneratorAdapter(model, logits_processor, sampler)
 
 
-@regex.register(LlamaCpp)
-def regex_llamacpp(
-    model: LlamaCpp,
-    regex_str: str,
+@regex.register(TransformersVision)
+def regex_vision(
+    model,
+    regex_str: str | Regex,
     sampler: Sampler = multinomial(),
 ):
-    from outlines.integrations.llamacpp import RegexLogitsProcessor
+    from outlines.processors import RegexLogitsProcessor
 
-    logits_processor = RegexLogitsProcessor(regex_str, llm=model.model)
-    return SequenceGeneratorAdapter(model, logits_processor, sampler)
+    if isinstance(regex_str, Regex):
+        regex_str = regex_str.pattern
 
-
-@regex.register(VLLM)
-def regex_vllm(
-    model: VLLM,
-    regex_str: str,
-    sampler: Sampler = multinomial(),
-):
-    from outlines.integrations.vllm import RegexLogitsProcessor
-
-    logits_processor = RegexLogitsProcessor(regex_str, model.model)
-    return SequenceGeneratorAdapter(model, logits_processor, sampler)
+    logits_processor = RegexLogitsProcessor(regex_str, tokenizer=model.tokenizer)
+    return VisionSequenceGeneratorAdapter(model, logits_processor, sampler)
 
 
 @regex.register(OpenAI)

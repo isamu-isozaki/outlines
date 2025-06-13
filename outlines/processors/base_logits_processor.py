@@ -20,6 +20,16 @@ def is_mlx_array_type(array_type):
     return issubclass(array_type, mx.array)
 
 
+def is_jax_array_type(array_type):
+    try:
+        import jaxlib
+    except ImportError:
+        return False
+    return issubclass(array_type, jaxlib.xla_extension.ArrayImpl) or isinstance(
+        array_type, jaxlib.xla_extension.ArrayImpl
+    )
+
+
 class OutlinesLogitsProcessor(Protocol):
     """
     Base class for logits processors which normalizes types of logits:
@@ -42,7 +52,7 @@ class OutlinesLogitsProcessor(Protocol):
         input_ids and logits are always 2D tensors for handling a batch of sequences.
 
         - input_ids -> List[List[tokens]]
-        - logits.shape[0] -> 2D_Tensor[logits]
+        - logits -> 2D_Tensor[logit floats]
 
         Important to keep in mind when designing universal logits processors
         - logits processors are only used once and never re-applied for a new sequence generator
@@ -67,22 +77,18 @@ class OutlinesLogitsProcessor(Protocol):
         3) Call self.process_logits() to perform business logic
         4) Cast logits back to original array library type
         """
-
         # ensure logits are torch Tensors
         torch_logits = self._to_torch(logits)
+        input_ids = self._to_torch(input_ids)
 
-        assert torch_logits.shape[:-1] == self._to_torch(input_ids).shape[:-1]
-
-        # ensure input_ids are List
-        if not isinstance(input_ids, list):
-            input_ids = input_ids.tolist()  # compatible with numpy, torch, and mlx
+        assert torch_logits.shape[:-1] == input_ids.shape[:-1]
 
         # Guarantee passed as 2D Tensors, then covert back to original (1D or 2D) shape
         if len(torch_logits.shape) == 2:
             processed_logits = self.process_logits(input_ids, torch_logits)
         elif len(torch_logits.shape) == 1:
             processed_logits = self.process_logits(
-                [input_ids], torch_logits.unsqueeze(0)
+                input_ids.unsqueeze(0), torch_logits.unsqueeze(0)
             ).squeeze(0)
 
         # return logits as passed array type
@@ -97,18 +103,28 @@ class OutlinesLogitsProcessor(Protocol):
         elif isinstance(tensor_like, np.ndarray):
             return torch.from_numpy(tensor_like)
 
-        elif isinstance(tensor_like, list):
+        elif isinstance(tensor_like, (list, tuple)):
             return torch.tensor(tensor_like)
 
         elif is_mlx_array_type(type(tensor_like)):
-            # mlx -> torch -> mlx conversion docs:
-            # https://ml-explore.github.io/mlx/build/html/usage/numpy.html
-            return torch.from_dlpack(tensor_like)
+            import mlx.core as mx
+
+            # https://ml-explore.github.io/mlx/build/html/usage/numpy.html#pytorch
+            if tensor_like.dtype == mx.bfloat16:
+                tensor_like = tensor_like.astype(mx.float32)
+            return torch.from_dlpack(np.array(tensor_like, copy=False))
+
+        elif is_jax_array_type(type(tensor_like)):
+            import jax
+
+            torch_tensor = torch.from_dlpack(jax.dlpack.to_dlpack(tensor_like))
+            return torch_tensor
 
         else:
             raise TypeError(
                 "LogitsProcessor must be called with either np.NDArray, "
-                "torch.Tensor, list, or mlx.core.array typed logits"
+                "torch.Tensor, list, or mlx.core.array typed logits. "
+                f"Logits type: `{type(tensor_like)}`"
             )
 
     @staticmethod
@@ -120,14 +136,22 @@ class OutlinesLogitsProcessor(Protocol):
         elif target_type == np.ndarray:
             return tensor.detach().numpy()
 
-        elif target_type == list:
+        elif target_type is list:
             return tensor.detach().tolist()
+
+        elif target_type is tuple:
+            return tuple(tensor.detach().tolist())
 
         elif is_mlx_array_type(target_type):
             import mlx.core as mx
 
             # numpy doesn't support bfloat16, mlx doesn't support direct conversion from torch
             return mx.array(tensor.float().numpy())
+
+        elif is_jax_array_type(target_type):
+            import jax
+
+            return jax.dlpack.from_dlpack(tensor)
 
         else:
             raise TypeError(

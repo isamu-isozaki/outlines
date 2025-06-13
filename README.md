@@ -1,20 +1,20 @@
 <div align="center" style="margin-bottom: 1em;">
 
-# Outlines 〰️
+<img src="./docs/assets/images/logo-light-mode.svg#gh-light-mode-only" alt="Outlines Logo" width=500></img>
+<img src="./docs/assets/images/logo-dark-mode.svg#gh-dark-mode-only" alt="Outlines Logo" width=500></img>
 
-<img src="./docs/assets/images/logo.png" alt="Outlines Logo" width=300></img>
 
-[![.txt Twitter][dottxt-twitter-badge]][dottxt-twitter]
-[![Outlines Twitter][outlines-twitter-badge]][outlines-twitter]
+ 🗒️ *Make LLMs speak the language of every application.* 🗒️
 
+Made with ❤👷️ by the team at [.txt](https://dottxt.co).
+
+[![Documentation][documentation-badge]][documentation]
 [![Contributors][contributors-badge]][contributors]
 [![Downloads][downloads-badge]][pypistats]
 [![Discord][discord-badge]][discord]
 
+[Youtube channel][youtube-dottxt] | [.txt blog][blog-dottxt] | [Twitter][dottxt-twitter]
 
-*Robust (structured) text generation.*
-
-Made with ❤👷️ by the team at [.txt](https://dottxt.co).
 
 </div>
 
@@ -23,24 +23,21 @@ Made with ❤👷️ by the team at [.txt](https://dottxt.co).
 pip install outlines
 ```
 
-First time here? Go to our [setup guide](https://outlines-dev.github.io/outlines/welcome)
+First time here? Go to our [setup guide](https://dottxt-ai.github.io/outlines/latest/welcome/)/
+
+Need a high-performance commercial solution for structured outputs? Email us at [contact@dottxt.co](mailto:contact@dottxt.co), or [schedule a call](https://cal.com/team/dottxt/sales) with us.
 
 ## Features
 
-- [x] 🤖 [Multiple model integrations](https://outlines-dev.github.io/outlines/installation): OpenAI, transformers, llama.cpp, exllama2, mamba
-- [x] 🖍️ Simple and powerful prompting primitives based on the [Jinja templating engine](https://jinja.palletsprojects.com/)
-- [x] 🚄 [Multiple choices](#multiple-choices), [type constraints](#type-constraint) and dynamic stopping
-- [x] ⚡ Fast [regex-structured generation](#efficient-regex-structured-generation)
-- [x] 🔥 Fast [JSON generation](#efficient-json-generation-following-a-pydantic-model) following a JSON schema or a Pydantic model
-- [x] 📝 [Grammar-structured generation](#using-context-free-grammars-to-guide-generation)
-- [x] 🐍 Interleave completions with loops, conditionals, and custom Python functions
-- [x] 💾 Caching of generations
-- [x] 🗂️ Batch inference
-- [x] 🎲 Sample with the greedy, multinomial and beam search algorithms (and more to come!)
-- [x] 🚀 [Serve with vLLM](https://outlines-dev.github.io/outlines/reference/vllm), with official Docker image, [`outlinesdev/outlines`](https://hub.docker.com/r/outlinesdev/outlines)!
+- 🤖 [Multiple model integrations](https://dottxt-ai.github.io/outlines/latest/installation): OpenAI, transformers, llama.cpp, exllama2, mamba
+- 🔥 Fast [JSON generation](#efficient-json-generation-following-a-pydantic-model) following a JSON schema or a Pydantic model
+- 🚄 [Multiple choices](#multiple-choices), [type constraints](#type-constraint) and dynamic stopping
+- 📝 Generate text that follows a [regex](#efficient-regex-structured-generation) or a [context-free grammar](#using-context-free-grammars-to-guide-generation)
+- 🖍️ Simple and powerful prompting primitives based on the [Jinja templating engine](https://jinja.palletsprojects.com/)
+- 🚀 [Serve with vLLM](https://dottxt-ai.github.io/outlines/latest/reference/serve/vllm), with official Docker image, [`outlinesdev/outlines`](https://hub.docker.com/r/outlinesdev/outlines)!
 
 
-Outlines 〰 has new releases and features coming every week. Make sure to ⭐ star and 👀 watch this repository, follow [@dottxtai][dottxt-twitter] to stay up to date!
+Outlines  has new releases and features coming every week. Make sure to ⭐ star and 👀 watch this repository, follow [@dottxtai][dottxt-twitter] to stay up to date!
 
 ## Why should I use structured generation?
 
@@ -54,10 +51,11 @@ Outlines 〰 has new releases and features coming every week. Make sure to ⭐ s
 ## .txt company
 
 <div align="center">
-<img src="./docs/assets/images/dottxt.png" alt="Outlines Logo" width=100></img>
+<img src="./docs/assets/images/dottxt-light.svg#gh-light-mode-only" alt="dottxt logo" width=100></img>
+<img src="./docs/assets/images/dottxt-dark.svg#gh-dark-mode-only" alt="dottxt logo" width=100></img>
 </div>
 
-We started a company to keep pushing the boundaries of structured generation. Learn more about [.txt](https://twitter.com/dottxtai), and  [give our .json API a try](https://h1xbpbfsf0w.typeform.com/to/ZgBCvJHF) if you need a hosted solution ✨
+We started a company to keep pushing the boundaries of structured generation. Learn more about [.txt](https://dottxt.ai), and  [license our commercial product](https://h1xbpbfsf0w.typeform.com/to/ZgBCvJHF) if you need SOTA performance and quality ✨
 
 ## Structured generation
 
@@ -66,12 +64,21 @@ is to ensure that there is a well-defined interface between their output and
 user-defined code. **Outlines** provides ways to control the generation of
 language models to make their output more predictable.
 
-Before using mistral models, request access on huggingface [here](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2).
-``` python
-# login to access mistral model
-from huggingface_hub import login
-login()
-```
+The following methods of structured generation are supported:
+
+- [Multiple choices](#multiple-choices)
+- [Type constraints](#type-constraint)
+- [Efficient regex-structured generation](#efficient-regex-structured-generation)
+- [Efficient JSON generation following a Pydantic model](#efficient-json-generation-following-a-pydantic-model)
+- [Using context-free grammars to guide generation](#using-context-free-grammars-to-guide-generation)
+- [Open functions](#open-functions)
+
+### Chat template tokens
+
+Outlines does not manage chat templating tokens when using instruct models. You must apply the chat template tokens to the prompt yourself. Chat template tokens are not needed for base models.
+
+Please see [the documentation](https://dottxt-ai.github.io/outlines/latest/reference/chat_templating) on chat templating for more.
+
 ### Multiple choices
 
 You can reduce the completion to a choice between multiple possibilities:
@@ -79,19 +86,47 @@ You can reduce the completion to a choice between multiple possibilities:
 ``` python
 import outlines
 
-model = outlines.models.transformers("mistralai/Mistral-7B-Instruct-v0.2")
+model_name = "HuggingFaceTB/SmolLM2-360M-Instruct"
+model = outlines.models.transformers(model_name)
 
-prompt = """You are a sentiment-labelling assistant.
-Is the following review positive or negative?
+# You must apply the chat template tokens to the prompt!
+# See below for an example.
+prompt = """
+<|im_start|>system
+You extract information from text.
+<|im_end|>
 
-Review: This restaurant is just awesome!
+<|im_start|>user
+What food does the following text describe?
+
+Text: I really really really want pizza.
+<|im_end|>
+<|im_start|>assistant
 """
 
-generator = outlines.generate.choice(model, ["Positive", "Negative"])
+generator = outlines.generate.choice(model, ["Pizza", "Pasta", "Salad", "Dessert"])
 answer = generator(prompt)
+
+# Likely answer: Pizza
 ```
 
-### Type constraint
+You can also pass in choices with an `Enum`:
+
+````python
+from enum import Enum
+
+class Food(str, Enum):
+    pizza = "Pizza"
+    pasta = "Pasta"
+    salad = "Salad"
+    dessert = "Dessert"
+
+generator = outlines.generate.choice(model, Food)
+answer = generator(prompt)
+# Likely answer: Pizza
+````
+
+### Type constraints
 
 You can instruct the model to only return integers or floats:
 
@@ -122,9 +157,19 @@ hood:
 ``` python
 import outlines
 
-model = outlines.models.transformers("mistralai/Mistral-7B-Instruct-v0.2")
+model = outlines.models.transformers("microsoft/Phi-3-mini-4k-instruct")
 
-prompt = "What is the IP address of the Google DNS servers? "
+prompt = """
+<|im_start|>system You are a helpful assistant.
+<|im_end|>
+
+<|im_start|>user
+What is an IP address of the Google DNS servers?
+<|im_end|>
+<|im_start|>assistant
+The IP address of a Google DNS server is
+
+"""
 
 generator = outlines.generate.text(model)
 unstructured = generator(prompt, max_tokens=30)
@@ -132,19 +177,17 @@ unstructured = generator(prompt, max_tokens=30)
 generator = outlines.generate.regex(
     model,
     r"((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)",
+    sampler=outlines.samplers.greedy(),
 )
 structured = generator(prompt, max_tokens=30)
 
 print(unstructured)
-# What is the IP address of the Google DNS servers?
+# 8.8.8.8
 #
-# Passive DNS servers are at DNS servers that are private.
-# In other words, both IP servers are private. The database
-# does not contain Chelsea Manning
+# <|im_end|>
 
 print(structured)
-# What is the IP address of the Google DNS servers?
-# 2.2.6.1
+# 8.8.8.8
 ```
 
 Unlike other libraries, regex-structured generation in Outlines is almost as fast
@@ -152,15 +195,13 @@ as non-structured generation.
 
 ### Efficient JSON generation following a Pydantic model
 
-Outlines 〰 allows to guide the generation process so the output is *guaranteed* to follow a [JSON schema](https://json-schema.org/) or [Pydantic model](https://docs.pydantic.dev/latest/):
+Outlines users can guide the generation process so the output is *guaranteed* to follow a [JSON schema](https://json-schema.org/) or [Pydantic model](https://docs.pydantic.dev/latest/):
 
 ```python
 from enum import Enum
 from pydantic import BaseModel, constr
 
 import outlines
-import torch
-
 
 class Weapon(str, Enum):
     sword = "sword"
@@ -185,27 +226,26 @@ class Character(BaseModel):
     strength: int
 
 
-model = outlines.models.transformers("mistralai/Mistral-7B-Instruct-v0.2")
+model = outlines.models.transformers("microsoft/Phi-3-mini-4k-instruct")
 
 # Construct structured sequence generator
 generator = outlines.generate.json(model, Character)
 
 # Draw a sample
-rng = torch.Generator(device="cuda")
-rng.manual_seed(789001)
+seed = 789001
 
-character = generator("Give me a character description", rng=rng)
+character = generator("Give me a character description", seed=seed)
 
 print(repr(character))
 # Character(name='Anderson', age=28, armor=<Armor.chainmail: 'chainmail'>, weapon=<Weapon.sword: 'sword'>, strength=8)
 
-character = generator("Give me an interesting character description", rng=rng)
+character = generator("Give me an interesting character description")
 
 print(repr(character))
 # Character(name='Vivian Thr', age=44, armor=<Armor.plate: 'plate'>, weapon=<Weapon.crossbow: 'crossbow'>, strength=125)
 ```
 
-The method works with union types, optional types, arrays, nested schemas, etc. Some field constraints are [not supported yet](https://github.com/outlines-dev/outlines/issues/215), but everything else should work.
+The method works with union types, optional types, arrays, nested schemas, etc. Some field constraints are [not supported yet](https://github.com/dottxt-ai/outlines/issues/215), but everything else should work.
 
 ### Efficient JSON generation following a JSON Schema
 
@@ -251,7 +291,7 @@ schema = '''{
     }
 }'''
 
-model = outlines.models.transformers("mistralai/Mistral-7B-Instruct-v0.2")
+model = outlines.models.transformers("microsoft/Phi-3-mini-4k-instruct")
 generator = outlines.generate.json(model, schema)
 character = generator("Give me a character description")
 ```
@@ -285,7 +325,7 @@ print(sequence)
 # (8-2)
 ```
 
-This was a very simple grammar, and you can use `outlines.generate.cfg` to generate syntactically valid Python, SQL, and much more than this. Any kind of structured text, really. All you have to do is search for "X EBNF grammar" on the web, and take a look at the [Outlines `grammars` module](https://github.com/outlines-dev/outlines/tree/main/outlines/grammars).
+This was a very simple grammar, and you can use `outlines.generate.cfg` to generate syntactically valid Python, SQL, and much more than this. Any kind of structured text, really. All you have to do is search for "X EBNF grammar" on the web, and take a look at the [Outlines `grammars` module](https://github.com/dottxt-ai/outlines/tree/main/outlines/grammars).
 
 ### Open functions
 
@@ -308,16 +348,53 @@ print(add(**result))
 
 A great advantage of passing functions directly to specify the structure is that the structure of the LLM will change with the function's definition. No need to change the code at several places!
 
+You can also embed various functions into an enum to generate params:
+
+```python
+from enum import Enum
+from functools import partial
+
+import outlines
+
+
+def add(a: int, b: int) -> int:
+    return a + b
+
+def mul(c: float, d: float) -> float:
+    return c * d
+
+class Operation(Enum):
+    add = partial(add)
+    mul = partial(mul)
+
+model = outlines.models.transformers("WizardLM/WizardMath-7B-V1.1")
+generator = outlines.generate.json(model, Operation)
+result = generator("Return json with two float named c and d respectively. c is negative and d greater than 1.0.")
+
+print(result)
+# {'c': -3.14, 'd': 1.5}
+```
+
 ## Prompting
 
 Building prompts can get messy. **Outlines** makes it easier to write and manage
-prompts by encapsulating templates inside "template functions".
+prompts by encapsulating templates inside "template functions". Template
+functions use the Jinja2 templating engine to help build complex prompts in a
+concise manner.
 
-These functions make it possible to neatly separate the prompt logic from the
-general program logic; they can be imported from other modules and libraries.
+Template functions are created by loading a Jinja2 template from a text file.
+Assume you have the following prompt template defined in `prompt.txt`:
 
-Template functions require no superfluous abstraction, they use the Jinja2
-templating engine to help build complex prompts in a concise manner:
+``` text
+You are a sentiment-labelling assistant.
+
+{% for example in examples %}
+{{ example[0] }} // {{ example[1] }}
+{% endfor %}
+{{ to_label }} //
+```
+
+You can then load it and call it with:
 
 ``` python
 import outlines
@@ -329,26 +406,22 @@ examples = [
     ("The waiter was rude", "Negative")
 ]
 
-@outlines.prompt
-def labelling(to_label, examples):
-    """You are a sentiment-labelling assistant.
-
-    {% for example in examples %}
-    {{ example[0] }} // {{ example[1] }}
-    {% endfor %}
-    {{ to_label }} //
-    """
-
-model = outlines.models.transformers("mistralai/Mistral-7B-Instruct-v0.2")
+labelling = outlines.Template.from_file("prompt.txt")
 prompt = labelling("Just awesome", examples)
-answer = outlines.generate.text(model)(prompt, max_tokens=100)
 ```
+
+This helps:
+
+- Keep content separate from the code
+- Design "white space perfect" prompts
+
+It is more maintainable and means prompts can be versioned separately from the code.
 
 ## Join us
 
 - 💡 **Have an idea?** Come chat with us on [Discord][discord]
-- 🔨 **Want to contribute?** Consult our [contribution guide](https://outlines-dev.github.io/outlines/community/contribute/).
-- 🐞 **Found a bug?** Open an [issue](https://github.com/outlines-dev/outlines/issues)
+- 🔨 **Want to contribute?** Consult our [contribution guide](https://dottxt-ai.github.io/outlines/latest/community/contribute/).
+- 🐞 **Found a bug?** Open an [issue](https://github.com/dottxt-ai/outlines/issues)
 
 
 ## Cite Outlines
@@ -362,13 +435,15 @@ answer = outlines.generate.text(model)(prompt, max_tokens=100)
 }
 ```
 
-[contributors]: https://github.com/outlines-dev/outlines/graphs/contributors
-[contributors-badge]: https://img.shields.io/github/contributors/outlines-dev/outlines?style=flat-square&logo=github&logoColor=white&color=ECEFF4
+[documentation]: https://dottxt-ai.github.io/outlines/latest/welcome/
+[documentation-badge]: https://img.shields.io/readthedocs/outlines
+[contributors]: https://github.com/dottxt-ai/outlines/graphs/contributors
+[contributors-badge]: https://img.shields.io/github/contributors/dottxt-ai/outlines?style=flat-square&logo=github&logoColor=white&color=ECEFF4
 [dottxt-twitter]: https://twitter.com/dottxtai
-[outlines-twitter]: https://twitter.com/OutlinesOSS
 [discord]: https://discord.gg/R9DSu34mGd
 [discord-badge]: https://img.shields.io/discord/1182316225284554793?color=81A1C1&logo=discord&logoColor=white&style=flat-square
 [downloads-badge]: https://img.shields.io/pypi/dm/outlines?color=89AC6B&logo=python&logoColor=white&style=flat-square
 [pypistats]: https://pypistats.org/packages/outlines
 [dottxt-twitter-badge]: https://img.shields.io/twitter/follow/dottxtai?style=social
-[outlines-twitter-badge]: https://img.shields.io/twitter/follow/OutlinesOSS?style=social
+[youtube-dottxt]: https://www.youtube.com/@dottxt-ai
+[blog-dottxt]: https://blog.dottxt.co/

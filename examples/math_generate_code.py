@@ -1,6 +1,8 @@
 """Example from https://dust.tt/spolu/a/d12ac33169"""
+
 import outlines
 import outlines.models as models
+from outlines import Template
 
 examples = [
     {"question": "What is 37593 * 67?", "code": "37593 * 67"},
@@ -16,9 +18,7 @@ examples = [
 
 question = "Carla is downloading a 200 GB file. She can download 2 GB/minute, but 40% of the way through the download, the download fails. Then Carla has to restart the download from the beginning. How load did it take her to download the file in minutes?"
 
-
-@outlines.prompt
-def answer_with_code_prompt(question, examples):
+answer_with_code_prompt = Template.from_string(
     """
     {% for example in examples %}
     QUESTION: {{example.question}}
@@ -27,6 +27,7 @@ def answer_with_code_prompt(question, examples):
     {% endfor %}
     QUESTION: {{question}}
     CODE:"""
+)
 
 
 def execute_code(code):
@@ -35,7 +36,7 @@ def execute_code(code):
 
 
 prompt = answer_with_code_prompt(question, examples)
-model = models.openai("gpt-3.5-turbo")
+model = models.openai("gpt-4o-mini")
 answer = outlines.generate.text(model)(prompt)
 result = execute_code(answer)
 print(f"It takes Carla {result:.0f} minutes to download the file.")

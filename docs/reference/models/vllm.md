@@ -3,7 +3,11 @@
 
 !!! Note "Installation"
 
-    You need to install the `vllm` library to use the vLLM integration. See the [installation section](#installation) for instructions to install vLLM for CPU or ROCm.
+    You need to install the `vllm` library to use the vLLM integration. See the [installation section](#installation) for instructions to install vLLM for CPU or ROCm. To get started you can also run:
+
+    ```bash
+    pip install "outlines[vllm]"
+    ```
 
 ## Load the model
 
@@ -13,7 +17,7 @@ Outlines supports models available via vLLM's offline batched inference interfac
 ```python
 from outlines import models
 
-model = models.vllm("mistralai/Mistral-7B-v0.1")
+model = models.vllm("microsoft/Phi-3-mini-4k-instruct")
 ```
 
 Or alternatively:
@@ -22,7 +26,7 @@ Or alternatively:
 import vllm
 from outlines import models
 
-llm = vllm.LLM("mistralai/Mistral-7B-v0.1")
+llm = vllm.LLM("microsoft/Phi-3-mini-4k-instruct")
 model = models.VLLM(llm)
 ```
 
@@ -41,7 +45,7 @@ You can pass any parameter that you would normally pass to `vllm.LLM`, as keywor
 from outlines import models
 
 model = models.vllm(
-    "mistralai/Mistral-7B-v0.1",
+    "microsoft/Phi-3-mini-4k-instruct",
     trust_remote_code=True,
     gpu_memory_utilization=0.7
 )
@@ -73,14 +77,14 @@ vLLM supports AWQ, GPTQ and SqueezeLLM quantized models:
 ```python
 from outlines import models
 
-model = models.vllm("TheBloke/Llama2-7b-Chat-AWQ", quantization="awq")
+model = models.vllm("TheBloke/Llama-2-7B-Chat-AWQ", quantization="awq")
 model = models.vllm("TheBloke/Mistral-7B-Instruct-v0.2-GPTQ", quantization="gptq")
 model = models.vllm("https://huggingface.co/squeeze-ai-lab/sq-llama-30b-w4-s5", quantization="squeezellm")
 ```
 
 !!! Warning "Dependencies"
 
-    To use AWQ model you need to install the auto-awq library `pip install auto-awq`.
+    To use AWQ model you need to install the autoawq library `pip install autoawq`.
 
     To use GPTQ models you need to install the autoGTPQ and optimum libraries `pip install auto-gptq optimum`.
 
@@ -94,7 +98,7 @@ To run multi-GPU inference with vLLM you need to set the `tensor_parallel_size` 
 from outlines import models
 
 model = models.vllm(
-    "mistralai/Mistral-7B-v0.1"
+    "microsoft/Phi-3-mini-4k-instruct"
     tensor_parallel_size=2
 )
 ```
@@ -120,7 +124,7 @@ from vllm.sampling_params import SamplingParams
 from outlines import models, generate
 
 
-model = models.vllm("mistralai/Mistral-7b-v0.1")
+model = models.vllm("microsoft/Phi-3-mini-4k-instruct")
 generator = generate.text(model)
 
 params = SamplingParams(n=2, frequency_penalty=1., min_tokens=2)

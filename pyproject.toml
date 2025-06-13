@@ -6,7 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "outlines"
 authors= [{name = "Outlines Developers"}]
 description = "Probabilistic Generative Model Programming"
-requires-python = ">=3.8"
+requires-python = ">=3.9,<3.13"
+license = {text = "Apache-2.0"}
 keywords=[
     "machine learning",
     "deep learning",
@@ -27,23 +28,30 @@ dependencies = [
    "jinja2",
    "lark",
    "nest_asyncio",
-   "numpy<2.0.0",
+   "numpy",
    "cloudpickle",
    "diskcache",
    "pydantic>=2.0",
-   "numba",
    "referencing",
    "jsonschema",
    "requests",
    "tqdm",
-   "datasets",
    "typing_extensions",
-   "pycountry",
-   "pyairports",
+   "iso3166",
+   "airportsdata",
+   "torch",
+   "outlines_core==0.1.26",
+   "genson",
 ]
 dynamic = ["version"]
 
 [project.optional-dependencies]
+vllm = ["vllm", "transformers", "numpy<2"]
+transformers = ["transformers", "accelerate", "datasets", "numpy<2"]
+mlxlm = ["mlx-lm", "datasets"]
+openai = ["openai"]
+llamacpp = ["llama-cpp-python", "transformers", "datasets", "numpy<2"]
+exllamav2 = ["exllamav2"]
 test = [
     "pre-commit",
     "pytest",
@@ -56,13 +64,16 @@ test = [
     "beartype<0.16.0",
     "responses",
     "llama-cpp-python",
-    "mlx-lm; platform_machine == 'arm64' and sys_platform == 'darwin'",
+    "mlx-lm>=0.19.2; platform_machine == 'arm64' and sys_platform == 'darwin'",
     "huggingface_hub",
     "openai>=1.0.0",
-    "vllm; sys_platform != 'darwin'",
-    "torch",
+    "datasets",
     "transformers",
+    "pillow",
+    "exllamav2",
+    "jax",
 ]
+test-gpu=["outlines[test]", "vllm; sys_platform == 'linux'"]
 serve = [
     "vllm>=0.3.0",
     "uvicorn",
@@ -71,9 +82,9 @@ serve = [
 ]
 
 [project.urls]
-homepage = "https://github.com/outlines-dev/outlines"
-documentation = "https://outlines-dev.github.io/outlines/"
-repository = "https://github.com/outlines-dev/outlines"
+homepage = "https://github.com/dottxt-ai/outlines"
+documentation = "https://dottxt-ai.github.io/outlines/"
+repository = "https://github.com/dottxt-ai/outlines"
 
 [project.readme]
 file="README.md"
@@ -92,7 +103,6 @@ write_to = "outlines/_version.py"
 testpaths = ["tests"]
 filterwarnings = [
     "error",
-    "ignore::numba.core.errors.NumbaPendingDeprecationWarning",
     "ignore::pydantic.warnings.PydanticDeprecatedSince20",
     "ignore::FutureWarning:transformers.*",
     "ignore::FutureWarning:huggingface_hub.*",
@@ -107,6 +117,9 @@ enable_incomplete_feature = ["Unpack"]
 [[tool.mypy.overrides]]
 module = [
     "exllamav2.*",
+    "jax",
+    "jaxlib",
+    "jax.numpy",
     "jinja2",
     "jsonschema.*",
     "openai.*",
@@ -118,9 +131,9 @@ module = [
     "cloudpickle.*",
     "diskcache.*",
     "pydantic.*",
+    "pydantic_core.*",
     "pytest",
     "referencing.*",
-    "tiktoken.*",
     "torch.*",
     "transformers.*",
     "llama_cpp",
@@ -128,14 +141,15 @@ module = [
     "lark.*",
     "interegular.*",
     "datasets.*",
-    "numba.*",
     "requests.*",
     "responses.*",
     "vllm.*",
     "uvicorn.*",
     "fastapi.*",
-    "pycountry.*",
-    "pyairports.*",
+    "iso3166.*",
+    "airportsdata.*",
+    "outlines_core.*",
+    "genson",
 ]
 ignore_missing_imports = true
 
@@ -145,6 +159,7 @@ omit = [
     "tests/*",
 ]
 branch = true
+relative_files = true
 
 [tool.coverage.report]
 omit = [
@@ -153,10 +168,17 @@ omit = [
 exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",
-    "...",
+    "\\.\\.\\.",
 ]
 show_missing = true
 
 [tool.diff_cover]
 compare_branch = "origin/main"
 diff_range_notation = ".."
+
+[tool.docformatter]
+style = "numpy"
+in-place = true
+
+[tool.ruff.lint]
+ignore = [ "E731", "F401" ]

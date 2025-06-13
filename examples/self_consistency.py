@@ -4,6 +4,7 @@ import numpy as np
 
 import outlines
 import outlines.models as models
+from outlines import Template
 
 examples = [
     {
@@ -43,8 +44,7 @@ examples = [
 question = "When I was 6 my sister was half my age. Now I’m 70 how old is my sister?"
 
 
-@outlines.prompt
-def few_shots(question, examples):
+few_shots = Template.from_string(
     """
     {% for example in examples %}
     Q: {{ example.question }}
@@ -53,9 +53,9 @@ def few_shots(question, examples):
     Q: {{ question }}
     A:
     """
+)
 
-
-model = models.openai("gpt-3.5-turbo")
+model = models.openai("gpt-4o-mini")
 generator = outlines.generate.text(model)
 prompt = few_shots(question, examples)
 answers = generator(prompt, samples=10)
@@ -78,5 +78,5 @@ max_count = max(results.values())
 answer_value = [key for key, value in results.items() if value == max_count][0]
 total_count = sum(results.values())
 print(
-    f"The most likely answer is {answer_value} ({max_count/total_count*100}% consensus)"
+    f"The most likely answer is {answer_value} ({max_count / total_count * 100}% consensus)"
 )

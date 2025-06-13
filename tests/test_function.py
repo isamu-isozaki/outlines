@@ -8,9 +8,11 @@ from outlines.function import Function, download_from_github, extract_function_f
 
 
 def test_function_basic():
-    @outlines.prompt
-    def test_template(text: str):
-        """{{ text }}"""
+    with pytest.deprecated_call(match="The @prompt decorator"):
+
+        @outlines.prompt
+        def test_template(text: str):
+            """{{ text }}"""
 
     class Foo(BaseModel):
         id: int
@@ -28,29 +30,29 @@ def test_download_from_github_invalid():
         download_from_github("outlines/program")
 
     with pytest.raises(ValueError, match="Do not append"):
-        download_from_github("outlines-dev/outlines/program.py")
+        download_from_github("dottxt-ai/outlines/program.py")
 
 
 @responses.activate
 def test_download_from_github_success():
     responses.add(
         responses.GET,
-        "https://raw.githubusercontent.com/outlines-dev/outlines/main/program.py",
+        "https://raw.githubusercontent.com/dottxt-ai/outlines/main/program.py",
         body="import outlines\n",
         status=200,
     )
 
-    file = download_from_github("outlines-dev/outlines/program")
+    file = download_from_github("dottxt-ai/outlines/program")
     assert file == "import outlines\n"
 
     responses.add(
         responses.GET,
-        "https://raw.githubusercontent.com/outlines-dev/outlines/main/foo/bar/program.py",
+        "https://raw.githubusercontent.com/dottxt-ai/outlines/main/foo/bar/program.py",
         body="import outlines\n",
         status=200,
     )
 
-    file = download_from_github("outlines-dev/outlines/foo/bar/program")
+    file = download_from_github("dottxt-ai/outlines/foo/bar/program")
     assert file == "import outlines\n"
 
 
@@ -102,10 +104,11 @@ function = outlines.Function(
 )
     """
 
-    fn = extract_function_from_file(content, "function")
-    assert (
-        str(type(fn)) == "<class 'outlines.function.Function'>"
-    )  # because imported via `exec`
+    with pytest.deprecated_call(match="The @prompt decorator"):
+        fn = extract_function_from_file(content, "function")
+        assert (
+            str(type(fn)) == "<class 'outlines.function.Function'>"
+        )  # because imported via `exec`
 
 
 def test_extract_function_from_file_no_function():
@@ -129,5 +132,6 @@ program = outlines.Function(
 )
     """
 
-    with pytest.raises(AttributeError, match="Could not find"):
-        extract_function_from_file(content, "function")
+    with pytest.deprecated_call(match="The @prompt decorator"):
+        with pytest.raises(AttributeError, match="Could not find"):
+            extract_function_from_file(content, "function")

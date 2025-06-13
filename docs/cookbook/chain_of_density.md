@@ -29,10 +29,10 @@ The prompt also asks the model to return a list of JSON objects that contain the
 We can now implement the prompt provided in the paper:
 
 ```python
-import outlines
+from outlines import Template
 
-@outlines.prompt
-def chain_of_density(article):
+
+chain_of_density = Template.from_string(
     """Article: {{ article }}
 
     You will generate increasingly concise, entity-dense summaries of the above Article.
@@ -61,6 +61,7 @@ def chain_of_density(article):
 
     Answer in JSON. The JSON should be a a dictionary with key "summaries" that contains a list (length 5) of dictionaries whose keys are "Missing_Entities" and "Denser_Summary".
     """
+)
 ```
 
 ??? Note
@@ -122,4 +123,4 @@ print(result.model_dump())
 
 Not bad, considering we used a smallish model to generate the summary! Chain of Density seems to be a very effective prompting technique to generate dense summaries, even with small quantized models. Its implementation in Outlines is also very short.
 
-Note that this is the first article I tried and it worked out of the box. Try it out on other articles, and please share the results on Twitter, or by opening [a new discussion](https://github.com/outlines-dev/outlines/discussions/categories/show-and-tell) on the Outlines repository!
+Note that this is the first article I tried and it worked out of the box. Try it out on other articles, and please share the results on Twitter, or by opening [a new discussion](https://github.com/dottxt-ai/outlines/discussions/categories/show-and-tell) on the Outlines repository!
